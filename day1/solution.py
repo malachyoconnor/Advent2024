@@ -1,5 +1,3 @@
-import os
-
 current_dir = "/".join(__file__.split("\\")[:-1])
 f = open(f"{current_dir}/input.txt", "r")
 
@@ -14,8 +12,7 @@ count = 0
 for a,b in zip(sorted(l1), sorted(l2)):
     count += max(a,b) - min(a,b)
 
-print(count)
-
+# PART 2:
 counts = dict()
 
 for v in l2:
@@ -25,4 +22,5 @@ similarity = 0
 for v in l1:
     similarity += counts.get(v, 0) * v
 
-print(similarity)
+print("Solution 1:", count)
+print("Solution 2:", similarity)
