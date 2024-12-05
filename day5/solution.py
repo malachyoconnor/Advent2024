@@ -22,14 +22,15 @@ def check_ordering(order):
 
 solution1 = 0
 incorrect_orderings = []
-for order in orderings:
+for i, order in enumerate(orderings):
     if check_ordering(order):
         solution1 += order[len(order)//2]
     else:
         incorrect_orderings.append(order)
 
+print(f"Solution 1: {solution1}")
 
-result2 = 0
+solution2 = 0
 for order in incorrect_orderings:
     visited = set()
     result = []
@@ -49,8 +50,6 @@ for order in incorrect_orderings:
     for node in order:
         dfs(node, order)
 
-    result2 += result[len(result)//2]
+    solution2 += result[len(result)//2]
 
-print(result2)
-
-
+print(f"Solution 2: {solution2}")
