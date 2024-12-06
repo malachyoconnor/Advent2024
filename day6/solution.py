@@ -7,28 +7,28 @@ level = [list(l) for l in f.read().split("\n")[:-1]]
 MAP_SIZE = len(level)
 
 start_location = ()
-obstacles = set()
+obstacle_exists_here = [[False]*len(x) for x in level]
+
 for y in range(len(level)):
     for x in range(len(level)):
         if level[y][x] == "^":
             start_location = (y, x)
-        elif level[y][x] == "#":
-            obstacles.add((y,x))
+        obstacle_exists_here[y][x] = level[y][x] == "#"
 
 # ^ > v <
 directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+CURRENT_DIRECTION = 0
 visited = set()
 
 def step(guard_location):
-    dy, dx = directions[0]
+    global CURRENT_DIRECTION
+    dy, dx = directions[CURRENT_DIRECTION]
 
-    # We've left the map
+    # We're still in the map
     while (0 <= guard_location[0] + dy < MAP_SIZE) and (0 <= guard_location[1] + dx < MAP_SIZE):
-        
-        if (guard_location[0] + dy, guard_location[1] + dx) in obstacles:
-            directions.append(directions[0])
-            directions.remove(directions[0])
-            dy, dx = directions[0]
+        if obstacle_exists_here[guard_location[0] + dy][guard_location[1] + dx]:
+            CURRENT_DIRECTION = (CURRENT_DIRECTION+1)%4
+            dy, dx = directions[CURRENT_DIRECTION]
         else:
             break
     else:
@@ -53,27 +53,24 @@ loop_locations = 0
 for i, (y,x) in enumerate(default_path):
     print(f"\rFinished: {(i)} / {(len(default_path))}", end='')
 
-    directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-    if (y,x) in obstacles:
+    if obstacle_exists_here[y][x]:
         continue
     
-    obstacles.add((y,x))
+    CURRENT_DIRECTION = 0
+    obstacle_exists_here[y][x] = True
     pos_and_dir = set()
     location = start_location
 
     while location != None:
-        pos_and_dir.add((location, directions[0]))
+        pos_and_dir.add((location, directions[CURRENT_DIRECTION])) 
         location = step(location)
 
-        if (location, directions[0]) in pos_and_dir:
+        if (location, directions[CURRENT_DIRECTION]) in pos_and_dir: 
             # We've found a loop!
             loop_locations += 1
             break
 
-    obstacles.remove((y,x))
+    obstacle_exists_here[y][x] = False
 
-print(f"Solution 2: {loop_locations}")
+print(f"\nSolution 2: {loop_locations}")
 
-
-# 4789
-# 1304
