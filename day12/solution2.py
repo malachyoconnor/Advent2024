@@ -1,5 +1,3 @@
-from collections import deque
-
 current_dir = "/".join(__file__.split("\\")[:-1])
 f = open(f"{current_dir}/input.txt", "r")
 map = [list(l) for l in f.read().split("\n")[:-1]]
