@@ -11,20 +11,21 @@ def next_state(A, B, output):
 def check_if_a_works(A, B=0):
     output = []
 
-    while True:
+    # Once for A=0 (;
+    A, B, output = next_state(A, B, output)
+    while A > 0:
         A, B, output = next_state(A, B, output)
         
-        if A <= 0:
+    if len(output) > len(real_program):
+        return False, 0, output
             
-            if len(output) > len(real_program):
-                return False, 0, output
-            
-            for x,y in zip(output, real_program[len(real_program) - len(output):]):
-                if x != y:
-                    return False, 0, output
-            print("RETURNING TRUE")
-            return True, A, output
-            
+    for x,y in zip(output, real_program[len(real_program) - len(output):]):
+        if x != y:
+            return False, 0, output
+
+    return True, A, output
+                        
+
 real_program = [2, 4, 1, 5, 7, 5, 0, 3, 4, 0, 1, 6, 5, 5, 3, 0]
 a = -1
 while True:
