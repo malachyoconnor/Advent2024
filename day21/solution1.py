@@ -1,5 +1,6 @@
 from functools import cache, lru_cache
 import math
+import re
 current_dir = "/".join(__file__.split("\\")[:-1])
 codes = open(f"{current_dir}/input.txt", "r").read().split("\n")[:-1]
 
@@ -75,7 +76,7 @@ def keypadShortestPath(code, start=(3, 2)):
 
     return get_permutations_of_paths(subPaths)
 
-@lru_cache(maxsize=200_000)
+@cache
 def get_next_position(buttonCombination, y=0, x=2):
     if len(buttonCombination) == 0:
         return "", y, x
@@ -100,10 +101,11 @@ def get_next_position(buttonCombination, y=0, x=2):
 # +---+---+---+
 # | < | v | > |
 # +---+---+---+
-def get_arrow_key_path_for_single_button(button, y, x):
+@cache
+def get_arrow_key_path_for_single_button(button, y=0, x=2):
         path = ""
         button_locations = {
-                        "^": (0, 1), "A": (0, 2),
+                          "^": (0, 1), "A": (0, 2),
             "<" : (1, 0), "v": (1, 1), ">": (1,2)
         }
 
@@ -127,29 +129,68 @@ def get_arrow_key_path_for_single_button(button, y, x):
             path += abs(dx) * "<"
             
         path += "A"
-
         return path, y_new, x_new
 
+@cache
+def get_next_chunks(chunk):
+    assert chunk[-1] == "A"
 
+    y, x = 0, 2
+    path = ""
+    for button in chunk:
+        sub_path, y, x = get_arrow_key_path_for_single_button(button, y, x)
+        path += sub_path
 
-code = "379A"
-total = 0
+    assert (y,x) == (0, 2)
+    return path
+
+@cache
+def get_total_chunk_cost(chunk, layers):
+    assert chunk[-1] == "A"
+
+    if layers == 0:
+        return len(chunk)
+    
+    complete_path = get_next_chunks(chunk)
+    split_chunks = re.split(r'(?<=A)', complete_path)[:-1]
+
+    total_cost = 0
+
+    for next_chunk in split_chunks:
+        sub_cost = get_total_chunk_cost(next_chunk, layers-1)
+        total_cost += sub_cost
+    
+    return total_cost
+    
+
+total_cost = 0
 for code in codes:
-
     minPathLen = math.inf
     paths = keypadShortestPath(code)
 
-    for i, path in enumerate(paths):
+    for path in paths:
+        cost = 0
 
-        x, _, _ = get_next_position(path)
-        for j in range(1):
-            x, _, _ = get_next_position(x)
-            info = get_next_position.cache_info()
-            print(info)
+        for chunk in re.split(r'(?<=A)', path)[:-1]:
+            cost += get_total_chunk_cost(chunk, 3)
+        
+        minPathLen = min(minPathLen, cost)
+    
+    total_cost += int(code[:-1]) * minPathLen
 
-        minPathLen = min(minPathLen, len(x))
+    print(int(code[:-1]))
 
-    total += int(code[:-1]) * minPathLen
+print(total_cost)
+
+# 109758
+
+# 103280473139874 TOO LOW
+# 264475209243357 TOO HIGH
+# 264475209243358
+# 264475209243358
 
 
-print(total)
+
+
+# Trying for
+# 134341709499296
