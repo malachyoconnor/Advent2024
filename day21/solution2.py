@@ -1,10 +1,11 @@
-from functools import cache, lru_cache
+from functools import cache
 import math
 import re
+
 current_dir = "/".join(__file__.split("\\")[:-1])
 codes = open(f"{current_dir}/input.txt", "r").read().split("\n")[:-1]
 
-test_code = codes[0]
+from showcallstack import showcallstack
 
 def get_permutations_of_paths(list_of_paths):
     if len(list_of_paths) == 0:
@@ -76,45 +77,6 @@ def keypadShortestPath(code, start=(3, 2)):
 
     return get_permutations_of_paths(subPaths)
 
-#     +---+---+
-#     | ^ | A |
-# +---+---+---+
-# | < | v | > |
-# +---+---+---+
-@cache
-def get_arrow_key_path_for_single_button(button, y=0, x=2):
-    path = ""
-    button_locations = {
-                    "^": (0, 1), "A": (0, 2),
-        "<" : (1, 0), "v": (1, 1), ">": (1,2)
-    }
-
-    y_new, x_new = button_locations[button]
-    dy, dx = y_new - y, x_new - x
-
-    if (y, x) == (1, 0):
-        path += abs(dx) * ("<" if dx < 0 else ">")
-        path += abs(dy) * ("^" if dy < 0 else "v")
-
-    elif (y,x) == (0, 1):
-        path += abs(dy) * ("^" if dy < 0 else "v")
-        path += abs(dx) * ("<" if dx < 0 else ">")
-
-    elif dy < 0:
-        path += abs(dy) * "^"
-        path += abs(dx) * ("<" if dx < 0 else ">")
-
-    elif dx > 0:
-        path += abs(dx) * ">"
-        path += abs(dy) * ("^" if dy < 0 else "v")
-
-    else:
-        path += abs(dy) * "v"
-        path += abs(dx) * "<"
-        
-    path += "A"
-    return path, y_new, x_new
-
 @cache
 def path_is_correct(path, y, x):
     directions = {"v": (1, 0), "^": (-1, 0), ">": (0, 1), "<": (0, -1), "A": (0,0)}
@@ -129,39 +91,36 @@ def path_is_correct(path, y, x):
     return True
 
 @cache
-def get_best_chunk(button, layers, y, x):
+def get_single_button_chunk(destination_button, layers, start_y, start_x):
     button_locations = {
                 "^": (0, 1), "A": (0, 2),
     "<" : (1, 0), "v": (1, 1), ">": (1,2)
     }
 
     if layers == 0:
-        return button, y, x
+        return destination_button, start_y, start_x
 
-    y_new, x_new = button_locations[button]
-    dy, dx = y_new - y, x_new - x
+    y_new, x_new = button_locations[destination_button]
+    dy, dx = y_new - start_y, x_new - start_x
     basic_path = abs(dy) * ("^" if dy < 0 else "v") + abs(dx) * ("<" if dx < 0 else ">")
 
     min_result_path, min_permuted_path = None, None
+
     for permuted_path in [start + "A" for start in get_path_to_button_permutations(basic_path)]:
-        path = ""
-        if not path_is_correct(permuted_path, y, x):
+
+        if not path_is_correct(permuted_path, start_y, start_x):
             continue
         
-        for button in permuted_path + "A":
-            print(button, y, x, layers-1)
-            sub_path, y, x = get_best_chunk(button, y, x, layers-1)
+        path = ""
+        y, x = start_y, start_x
+        for destination_button in permuted_path:
+            sub_path, y, x = get_single_button_chunk(destination_button, layers-1, y, x)
             path += sub_path
 
         if min_permuted_path is None or len(path) < len(min_permuted_path):
             min_result_path, min_permuted_path = permuted_path, path
 
     return min_result_path, y_new, x_new
-
-for layer in range(1, 2):
-    print(get_best_chunk("v", layer, 0, 2))
-
-exit()
 
 
 @cache
@@ -171,7 +130,7 @@ def get_next_chunks(chunk):
     y, x = 0, 2
     path = ""
     for button in chunk:
-        sub_path, y, x = get_arrow_key_path_for_single_button(button, y, x)
+        sub_path, y, x = get_single_button_chunk(button, 20, y, x)
         path += sub_path
 
     assert (y,x) == (0, 2)
@@ -197,7 +156,7 @@ def get_total_chunk_cost(chunk, layers):
     return total_cost
     
 
-for NUMBER_OF_BOTS in 1, 2, 3:
+for NUMBER_OF_BOTS in 2, 25:
 
     total_cost = 0
     for code in codes:
@@ -216,4 +175,3 @@ for NUMBER_OF_BOTS in 1, 2, 3:
 
 
     print(total_cost)
-
