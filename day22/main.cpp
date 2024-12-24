@@ -1,27 +1,27 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
-#include <map>
-#include <set>
+#include <unordered_set>
 #include <unordered_map>
+#include <cstdint>
 using namespace std;
 
-long long mix(long long secret, long long other) {
+static long long mix(long long secret, long long other) {
     return secret ^ other;
 }
 
 
-long long prune(long long secret) {
+static long long prune(long long secret) {
 	return secret % 16777216LL;
 }
 
-int get_price(long long secret) {
+static int get_price(long long secret) {
 	return secret % 10;
 }
 
 std::unordered_map<long long, long long> secret_memoizer;
 
-long long next_secret(long long secret) {
+static long long next_secret(long long secret) {
 	if (secret_memoizer.count(secret) != 0) {
 		return secret_memoizer.at(secret);
 	}
@@ -42,7 +42,7 @@ long long next_secret(long long secret) {
     return secret;
 }
 
-void update_sequence(std::vector<int8_t>& price_sequence, int price_change) {
+static void update_sequence(std::vector<int8_t>& price_sequence, int price_change) {
 	if (price_sequence.size() < 4) {
 		price_sequence.push_back(price_change);
 		return;
@@ -55,9 +55,9 @@ void update_sequence(std::vector<int8_t>& price_sequence, int price_change) {
 }
 
 typedef long long TUPLE;
-std::vector<std::map<TUPLE, int>> monkey_sequences;
+std::vector<std::unordered_map<TUPLE, int>> monkey_sequences;
 
-void update_stored_best_sequences(const std::vector<int8_t>& sequence, int monkey_id, int price) {
+static void update_stored_best_sequences(const std::vector<int8_t>& sequence, int monkey_id, int price) {
 	if (sequence.size() < 4) {
 		return;
 	}
@@ -88,6 +88,7 @@ int main() {
 	}
 
 	int monkey_id = 0;
+	long long total = 0;
 	for (auto secret : secrets) {
 
 		int prev_price = get_price(secret);
@@ -105,13 +106,13 @@ int main() {
 			prev_price = new_price;
 		}
 
+		total += secret;
 		monkey_id += 1;
 	}
 
-	cout << "STARTING NEXT ITERATION" << endl;
+	cout << "Solution 1: " << total << endl;
 
-	std::set<TUPLE> all_sequences;
-
+	std::unordered_set<TUPLE> all_sequences;
 	for (const auto& sequence_dict : monkey_sequences) {
 		
 		for (auto [key, value]: sequence_dict) {
@@ -121,19 +122,15 @@ int main() {
 	
 	int best_price = 0;
 	for (TUPLE sequence_tup: all_sequences) {
-
 		cout << best_price << "\r";
 
 		int total = 0;
-
 		for (const auto& sequence_dict: monkey_sequences) {
 			total = total + (sequence_dict.count(sequence_tup) > 0 ? sequence_dict.at(sequence_tup) : 0);
 		}
 
 		best_price = max(best_price, total);
 	}
-
-	cout << best_price << endl;
-
+	cout << "Solution 2: " << best_price << endl;
 	return 0;
 }
