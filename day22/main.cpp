@@ -1,9 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
-#include <filesystem>
 #include <map>
-#include <list>
 #include <set>
 #include <unordered_map>
 using namespace std;
@@ -44,7 +42,7 @@ long long next_secret(long long secret) {
     return secret;
 }
 
-void update_sequence(std::vector<int>& price_sequence, int price_change) {
+void update_sequence(std::vector<int8_t>& price_sequence, int price_change) {
 	if (price_sequence.size() < 4) {
 		price_sequence.push_back(price_change);
 		return;
@@ -56,15 +54,20 @@ void update_sequence(std::vector<int>& price_sequence, int price_change) {
 	price_sequence[3] = price_change;
 }
 
-typedef std::tuple<int, int, int, int> TUPLE;
+typedef long long TUPLE;
 std::vector<std::map<TUPLE, int>> monkey_sequences;
 
-void update_stored_best_sequences(const std::vector<int>& sequence, int monkey_id, int price) {
+void update_stored_best_sequences(const std::vector<int8_t>& sequence, int monkey_id, int price) {
 	if (sequence.size() < 4) {
 		return;
 	}
 
-	TUPLE seq_tup = std::tuple{sequence[0], sequence[1], sequence[2], sequence[3]};
+	long long element0 = ((int) ((1<<8) - 1) & sequence[0]);
+	long long element1 = ((int) ((1<<8) - 1) & sequence[1]);
+	long long element2 = ((int) ((1<<8) - 1) & sequence[2]);
+	long long element3 = ((int) ((1<<8) - 1) & sequence[3]);
+	
+	TUPLE seq_tup = (element0 << 48) | (element1 << 32) | (element2 << 16) | element3;
 
 	if (monkey_sequences[monkey_id].count(seq_tup) > 0) {
 		return;
@@ -74,6 +77,7 @@ void update_stored_best_sequences(const std::vector<int>& sequence, int monkey_i
 }
 
 int main() {
+
 	FILE* success = freopen("input.txt", "r", stdin);
 	assert(success != 0);
 
@@ -87,7 +91,7 @@ int main() {
 	for (auto secret : secrets) {
 
 		int prev_price = get_price(secret);
-		std::vector<int> price_change_sequence;
+		std::vector<int8_t> price_change_sequence;
 		monkey_sequences.push_back({});
 
 		for (int i = 0; i < 2000; i++) {
@@ -129,7 +133,7 @@ int main() {
 		best_price = max(best_price, total);
 	}
 
-	cout << best_price;
+	cout << best_price << endl;
 
 	return 0;
 }
